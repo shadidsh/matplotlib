@@ -2753,6 +2753,7 @@ class NavigationToolbar2(object):
         ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
         (None, None, None, None),
         ('Save', 'Save the figure', 'filesave', 'save_figure'),
+        ('Labelling', 'Place a custom label on the graph', 'label', 'label')
       )
 
     def __init__(self, canvas):
@@ -2761,6 +2762,10 @@ class NavigationToolbar2(object):
         self._nav_stack = cbook.Stack()
         self._xypress = None  # the location and axis info at the time
                               # of the press
+        self.lbl_box = None
+        self.lbl_text = ''
+        self.texts = []
+        
         self._idPress = None
         self._idRelease = None
         self._active = None
@@ -3147,6 +3152,92 @@ class NavigationToolbar2(object):
         """Reset the axes stack."""
         self._nav_stack.clear()
         self.set_history_buttons()
+
+    def label(self, *args):
+        if self._active == 'Labelling':
+            self._active = None
+        else:
+            self._active = 'Labelling'
+
+        if self._idPress is not None:
+            self._idPress = self.canvas.mpl_disconnect(self._idPress)
+            self.mode = ''
+
+        if self._idRelease is not None:
+            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
+            self.mode = ''
+
+        
+        fig = self.canvas.figure
+        ax =  self.canvas.figure.gca() 
+        if self._active:
+            from matplotlib.widgets import TextBox
+            lines, = ax.plot([None], [None], linestyle="none", marker='.',
+                             color='black')
+            self.text_ax = lines.figure.add_axes([0.25, 0.02, 0.6, 0.04])
+            self.lbl_box = TextBox(self.text_ax, 'Enter text then click',
+                                   initial="Text here")
+            self.lbl_box.on_submit(self.update_label_text)
+            
+            print(self.text_ax)
+            fig.add_axes(self.text_ax)
+            self.canvas.draw_idle()
+       
+            self.mode = 'label active'
+            self.canvas.widgetlock(self)
+            self._idPress = self.canvas.mpl_connect(
+                'button_press_event', self.press_label)
+            self._idRelease = self.canvas.mpl_connect(
+                'button_release_event', self.release_label)
+        else:
+            fig.delaxes(self.text_ax)
+            self.canvas.draw_idle()
+            self.canvas.widgetlock.release(self)
+
+        for a in self.canvas.figure.get_axes():
+            a.set_navigate_mode(self._active)
+
+        self.set_message(self.mode)
+
+
+    def release_label(self, event):
+        self.__write_text(event);
+    
+    import time    
+    def __write_text(self, event):
+        ax1 = self.canvas.figure.get_axes()[0]
+        ax2 = self.canvas.figure.get_axes()[1]
+        ax = ax1        
+        print(event.inaxes, ax1, ax2)
+        
+        if event.inaxes != ax1:
+            return
+        
+        texts = self.canvas.figure.texts
+        
+        # Require mouse press and release to be on the same point to write text
+        if (self.release):
+            self.xs = event.xdata
+            self.ys = event.ydata
+            text = ax.text(self.xs, self.ys, self.lbl_text)
+            self.texts.append(text)
+            print(texts,  "vs", text, "vs", self.texts)
+            self.canvas.draw()
+            
+            text.remove()
+            #self.canvas.draw()
+            
+            
+    def press_label(self, event):
+        if event.dblclick:
+            print("double click")
+
+        if self._nav_stack() is None:
+            self.push_current()        
+        self.release = True
+    
+    def update_label_text(self, text):
+        self.lbl_text = text
 
     def zoom(self, *args):
         """Activate zoom to rect mode."""
