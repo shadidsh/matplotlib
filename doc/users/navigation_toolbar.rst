@@ -77,9 +77,9 @@ The ``Save`` button
 
 
 
-.. image:: ../../lib/matplotlib/mpl-data/images/label.png
+.. image:: ../../lib/matplotlib/mpl-data/images/label_large.png
 
-The ``Label``
+The ``Label`` button
 
 Click this toolbar button to activate this mode.
 
