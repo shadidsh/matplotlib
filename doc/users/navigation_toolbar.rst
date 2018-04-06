@@ -76,6 +76,15 @@ The ``Save`` button
     ``svg`` and ``pdf``.
 
 
+
+.. image:: ../../lib/matplotlib/mpl-data/images/label.png
+
+The ``Label``
+
+Click this toolbar button to activate this mode.
+
+Insert text on the generated textbox to write a custom label message. Click anywhere on the graph and the label will be set to the text entered. On activation, you are initially on delete mode, and thus clicking on existing labels will remove them from the axes.
+
 .. _key-event-handling:
 
 Navigation Keyboard Shortcuts
