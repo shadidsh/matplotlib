@@ -3168,10 +3168,10 @@ class NavigationToolbar2(object):
             self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
             self.mode = ''
 
-        
+
         fig = self.canvas.figure
         ax =  self.canvas.figure.gca()
-        
+
         delete_text = 'Click labels to delete'
         if self._active:
             from matplotlib.widgets import TextBox
@@ -3210,30 +3210,30 @@ class NavigationToolbar2(object):
 
 
     def __write_text(self, event):
-        ax1 = self.canvas.figure.get_axes()[0]
-        
-        if event.inaxes != ax1:
+        ax = self.canvas.figure.get_axes()[0]
+
+        if event.inaxes != ax:
             return
-        
+
         delete_text = 'Click labels to delete'
         if (self.release):
             self.xs = event.xdata
             self.ys = event.ydata
-            if (self.lbl_text == delete_text):             
+            if (self.lbl_text == delete_text):
                 for i in range(len(self.texts)):
                     text_val = self.texts[i]
                     contains, attrd =  text_val.contains(event)
-                    
+
                     if contains:
                         text_val.remove()
-                        del self.texts[i]                        
+                        del self.texts[i]
                         self.canvas.draw()
                         return
             else:
                 if self._nav_stack() is None:
                     self.push_current()
-                text = ax.text(self.xs, self.ys, self.lbl_text)            
-                self.texts.append(text)                            
+                text = ax.text(self.xs, self.ys, self.lbl_text)
+                self.texts.append(text)
                 self.canvas.draw()
             
             
