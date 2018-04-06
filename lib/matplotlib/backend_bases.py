@@ -56,6 +56,7 @@ from matplotlib._pylab_helpers import Gcf
 from matplotlib.transforms import Bbox, TransformedBbox, Affine2D
 from matplotlib.path import Path
 
+
 try:
     from PIL import Image
     _has_pil = True
@@ -3169,22 +3170,26 @@ class NavigationToolbar2(object):
 
         
         fig = self.canvas.figure
-        ax =  self.canvas.figure.gca() 
+        ax =  self.canvas.figure.gca()
+        
+        delete_text = 'Click labels to delete'
         if self._active:
             from matplotlib.widgets import TextBox
             lines, = ax.plot([None], [None], linestyle="none", marker='.',
-                             color='black')
+                             color='black')            
             self.text_ax = lines.figure.add_axes([0.25, 0.02, 0.6, 0.04])
             self.lbl_box = TextBox(self.text_ax, 'Enter text then click',
-                                   initial="Text here")
+                                   initial=delete_text)
+            self.lbl_text = delete_text
+            
             self.lbl_box.on_submit(self.update_label_text)
             
-            print(self.text_ax)
             fig.add_axes(self.text_ax)
             self.canvas.draw_idle()
        
             self.mode = 'label active'
             self.canvas.widgetlock(self)
+            
             self._idPress = self.canvas.mpl_connect(
                 'button_press_event', self.press_label)
             self._idRelease = self.canvas.mpl_connect(
@@ -3202,38 +3207,37 @@ class NavigationToolbar2(object):
 
     def release_label(self, event):
         self.__write_text(event);
-    
-    import time    
+
+
     def __write_text(self, event):
         ax1 = self.canvas.figure.get_axes()[0]
-        ax2 = self.canvas.figure.get_axes()[1]
-        ax = ax1        
-        print(event.inaxes, ax1, ax2)
         
         if event.inaxes != ax1:
             return
         
-        texts = self.canvas.figure.texts
-        
-        # Require mouse press and release to be on the same point to write text
+        delete_text = 'Click labels to delete'
         if (self.release):
             self.xs = event.xdata
             self.ys = event.ydata
-            text = ax.text(self.xs, self.ys, self.lbl_text)
-            self.texts.append(text)
-            print(texts,  "vs", text, "vs", self.texts)
-            self.canvas.draw()
+            if (self.lbl_text == delete_text):             
+                for i in range(len(self.texts)):
+                    text_val = self.texts[i]
+                    contains, attrd =  text_val.contains(event)
+                    
+                    if contains:
+                        text_val.remove()
+                        del self.texts[i]                        
+                        self.canvas.draw()
+                        return
+            else:
+                if self._nav_stack() is None:
+                    self.push_current()
+                text = ax.text(self.xs, self.ys, self.lbl_text)            
+                self.texts.append(text)                            
+                self.canvas.draw()
             
-            text.remove()
-            #self.canvas.draw()
             
-            
-    def press_label(self, event):
-        if event.dblclick:
-            print("double click")
-
-        if self._nav_stack() is None:
-            self.push_current()        
+    def press_label(self, event):                
         self.release = True
     
     def update_label_text(self, text):
